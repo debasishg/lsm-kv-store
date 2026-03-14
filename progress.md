@@ -65,3 +65,28 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 ### 2026-03-14 — T-014: KvStore integration tests
 - Created `tests/integration.rs` with 11 tests: put/get round-trip, overwrite, delete (tombstone), delete nonexistent, persistence across reopen (flushed), WAL recovery (unflushed), overwrite persistence, tombstone persistence, list (live entries only), flush+read from SSTable, many writes/reads (100 KV pairs with small threshold).
 - All pass including the stress test with 100 entries and forced flushes.
+
+### T-017: CLI with clap
+- Implemented `src/main.rs` with clap derive: subcommands `put`, `get`, `delete`, `list`.
+- Configurable `--db-path` flag (default: `lsm_data`). Error handling via `run()` → `main()` pattern.
+- Smoke tested all commands successfully.
+
+### T-018: CLI integration tests
+- Created `tests/cli_integration.rs` with 6 tests using `std::process::Command` against the built binary.
+- Tests: put+get, get missing key, delete+get, list (sorted), list empty, overwrite.
+
+### T-019: Doc comments
+- All public types and methods already had doc comments from implementation phases.
+- Added crate-level doc comment (`//!`) to `src/lib.rs` with a `no_run` usage example (generates a doc-test).
+
+### T-020: Benchmarks
+- Created `benches/throughput.rs` (run as `[[test]]`): writes 10k random KV pairs, reopens, reads all back.
+- Initial result: ~216 writes/sec due to per-write `fsync()`. Added `sync_writes` config to `KvStoreConfig` (default true).
+- With `sync_writes = false` (batch WAL flushes): ~444k writes/sec in release mode, ~63k reads/sec. Well above the 5k target.
+- Flush still fsyncs the WAL before writing the SSTable, so data is durable at memtable-flush boundaries.
+
+### T-021: Final polish + README
+- Created README.md with features, quick start (library + CLI), configuration, test/bench commands, architecture diagram.
+- All 47 tests passing. `cargo fmt` and `cargo clippy --all-targets -- -D warnings` clean. All 21 TASKS.md items checked.
+
+**MISSION COMPLETE — LSM KV Store MVP achieved.**

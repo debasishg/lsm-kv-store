@@ -40,14 +40,14 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 
 ## Phase 7: CLI
 
-- [ ] **T-017** Implement CLI in `src/main.rs` with clap: subcommands `put <key> <value>`, `get <key>`, `delete <key>`, `list`; each opens KvStore at a default/configurable path, performs operation, prints result
-- [ ] **T-018** Write integration tests for CLI: test via `std::process::Command` or by testing the underlying KvStore operations; cover put+get, delete+get (shows deleted), list output
+- [x] **T-017** Implement CLI in `src/main.rs` with clap: subcommands `put <key> <value>`, `get <key>`, `delete <key>`, `list`; each opens KvStore at a default/configurable path, performs operation, prints result
+- [x] **T-018** Write integration tests for CLI: test via `std::process::Command` or by testing the underlying KvStore operations; cover put+get, delete+get (shows deleted), list output
 
 ## Phase 8: Polish & Benchmarks
 
-- [ ] **T-019** Add doc comments (`///`) to all public types and methods across all modules
-- [ ] **T-020** Write a simple benchmark (in `benches/` or as a test): write 10,000 random KV pairs, restart, read all back; verify ≥ 5k writes/sec on local machine; print timing results
-- [ ] **T-021** Final pass: `cargo fmt`, `cargo clippy --all-targets -- -D warnings` clean, all tests green, README.md with usage examples
+- [x] **T-019** Add doc comments (`///`) to all public types and methods across all modules
+- [x] **T-020** Write a simple benchmark (in `benches/` or as a test): write 10,000 random KV pairs, restart, read all back; verify ≥ 5k writes/sec on local machine; print timing results
+- [x] **T-021** Final pass: `cargo fmt`, `cargo clippy --all-targets -- -D warnings` clean, all tests green, README.md with usage examples
 
 ---
 
