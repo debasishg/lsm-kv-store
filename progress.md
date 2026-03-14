@@ -30,3 +30,8 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 ### 2026-03-14 — T-004: MemTable unit tests
 - Added 11 unit tests covering: put/get, missing key, overwrite, delete (tombstone), delete nonexistent, is_empty/len, approximate_size, sorted iteration, drain, put-after-delete.
 - Fixed size tracking bug: overwrite was double-counting key bytes. Fixed by only adjusting value size diff on overwrite.
+
+### 2026-03-14 — T-005: WAL struct + WalEntry
+- Implemented `WalEntry` enum (Put/Delete) with serde derive in `src/wal.rs`.
+- Implemented `Wal` struct: open, append (length-prefixed bincode), fsync, recover (graceful truncation handling), reset, remove.
+- Using `u32` length prefix + bincode payload format. Incomplete trailing entries silently skipped on recovery.

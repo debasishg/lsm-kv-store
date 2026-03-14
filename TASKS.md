@@ -16,7 +16,7 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 
 ## Phase 3: Write-Ahead Log
 
-- [ ] **T-005** Define `WalEntry` enum (Put { key, value } | Delete { key }) with serde Serialize/Deserialize; implement `Wal` struct in `src/wal.rs` with `open(path)`, `append(entry) → Result`, `fsync()`, `recover(path) → Vec<WalEntry>`
+- [x] **T-005** Define `WalEntry` enum (Put { key, value } | Delete { key }) with serde Serialize/Deserialize; implement `Wal` struct in `src/wal.rs` with `open(path)`, `append(entry) → Result`, `fsync()`, `recover(path) → Vec<WalEntry>`
 - [ ] **T-006** Write unit tests for WAL: append entries, close & reopen, recover all entries in order, handle empty WAL, handle corrupted trailing bytes gracefully
 
 ## Phase 4: SSTable
