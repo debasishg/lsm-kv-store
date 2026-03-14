@@ -24,6 +24,10 @@ pub struct KvStoreConfig {
     pub memtable_threshold: usize,
     /// Trigger compaction when a level has ≥ this many SSTables.
     pub compaction_threshold: usize,
+    /// If `true`, fsync the WAL after every write (durable but slower).
+    /// If `false`, WAL writes are buffered and fsynced only on memtable flush
+    /// (higher throughput, but recent writes may be lost on crash).
+    pub sync_writes: bool,
 }
 
 impl KvStoreConfig {
@@ -33,6 +37,7 @@ impl KvStoreConfig {
             db_path: db_path.into(),
             memtable_threshold: DEFAULT_MEMTABLE_THRESHOLD,
             compaction_threshold: DEFAULT_COMPACTION_THRESHOLD,
+            sync_writes: true,
         }
     }
 }
@@ -142,7 +147,9 @@ impl KvStore {
             key: key.clone(),
             value: value.clone(),
         })?;
-        self.wal.fsync()?;
+        if self.config.sync_writes {
+            self.wal.fsync()?;
+        }
         self.memtable.put(key, value);
         self.maybe_flush()?;
         Ok(())
@@ -152,7 +159,9 @@ impl KvStore {
     pub fn delete(&mut self, key: impl Into<Vec<u8>>) -> Result<()> {
         let key = key.into();
         self.wal.append(&WalEntry::Delete { key: key.clone() })?;
-        self.wal.fsync()?;
+        if self.config.sync_writes {
+            self.wal.fsync()?;
+        }
         self.memtable.delete(key);
         self.maybe_flush()?;
         Ok(())
@@ -227,6 +236,9 @@ impl KvStore {
         if self.memtable.is_empty() {
             return Ok(());
         }
+
+        // Ensure WAL is durable before flushing (important when sync_writes is off).
+        self.wal.fsync()?;
 
         let entries = self.memtable.drain();
         let sst_path = self.next_sst_path(0);
