@@ -23,7 +23,7 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 
 - [x] **T-007** Implement `SSTableWriter` in `src/sstable.rs`: takes sorted entries from MemTable, writes data block (length-prefixed bincode key-value pairs) + index block (key → byte offset) + footer (index offset), returns SSTable metadata (file path, entry count, min/max key)
 - [x] **T-008** Implement `SSTableReader` in `src/sstable.rs`: `open(path)` loads index into memory, `get(key) → Result<Option<Option<Vec<u8>>>>` does binary search on index then point read from data block
-- [ ] **T-009** Write unit tests for SSTable: write then read back entries, point lookup hit/miss, tombstone handling, multiple SSTables with overlapping keys (newest wins)
+- [x] **T-009** Write unit tests for SSTable: write then read back entries, point lookup hit/miss, tombstone handling, multiple SSTables with overlapping keys (newest wins)
 
 ## Phase 5: KvStore Engine
 

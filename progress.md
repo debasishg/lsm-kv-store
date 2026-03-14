@@ -45,3 +45,7 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 - Format: data block (length-prefixed bincode entries) + index block (bincode Vec<(key, offset)>) + footer (u64 index offset).
 - Reader: opens file, loads index into memory, binary search for point lookups.
 - Added `Entry` type alias, `scan_all()` for compaction, `remove_file()`, `SSTableMeta`.
+
+### 2026-03-14 — T-009: SSTable tests
+- 6 tests: write+read, point lookup miss, tombstone, scan_all, multiple SSTables newest-wins, remove_file.
+- All pass. Verified format integrity through write→read round-trip.

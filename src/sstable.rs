@@ -201,3 +201,106 @@ impl SSTableReader {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn sample_entries() -> Vec<Entry> {
+        vec![
+            (b"alpha".to_vec(), Some(b"1".to_vec())),
+            (b"bravo".to_vec(), Some(b"2".to_vec())),
+            (b"charlie".to_vec(), None), // tombstone
+            (b"delta".to_vec(), Some(b"4".to_vec())),
+        ]
+    }
+
+    #[test]
+    fn test_write_and_read_back() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("test.sst");
+        let entries = sample_entries();
+
+        let meta = SSTableWriter::write(&path, &entries, 0).unwrap();
+        assert_eq!(meta.entry_count, 4);
+        assert_eq!(meta.min_key, b"alpha");
+        assert_eq!(meta.max_key, b"delta");
+        assert_eq!(meta.level, 0);
+
+        let reader = SSTableReader::open(&path, 0).unwrap();
+        assert_eq!(reader.get(b"alpha").unwrap(), Some(Some(b"1".to_vec())));
+        assert_eq!(reader.get(b"bravo").unwrap(), Some(Some(b"2".to_vec())));
+        assert_eq!(reader.get(b"delta").unwrap(), Some(Some(b"4".to_vec())));
+    }
+
+    #[test]
+    fn test_point_lookup_miss() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("miss.sst");
+        SSTableWriter::write(&path, &sample_entries(), 0).unwrap();
+        let reader = SSTableReader::open(&path, 0).unwrap();
+
+        assert_eq!(reader.get(b"nonexistent").unwrap(), None);
+    }
+
+    #[test]
+    fn test_tombstone_handling() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("tomb.sst");
+        SSTableWriter::write(&path, &sample_entries(), 0).unwrap();
+        let reader = SSTableReader::open(&path, 0).unwrap();
+
+        assert_eq!(reader.get(b"charlie").unwrap(), Some(None));
+    }
+
+    #[test]
+    fn test_scan_all() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("scan.sst");
+        let entries = sample_entries();
+        SSTableWriter::write(&path, &entries, 0).unwrap();
+        let reader = SSTableReader::open(&path, 0).unwrap();
+
+        let scanned = reader.scan_all().unwrap();
+        assert_eq!(scanned, entries);
+    }
+
+    #[test]
+    fn test_multiple_sstables_newest_wins() {
+        let dir = tempdir().unwrap();
+
+        let old_path = dir.path().join("old.sst");
+        let old_entries = vec![(b"alpha".to_vec(), Some(b"old".to_vec()))];
+        SSTableWriter::write(&old_path, &old_entries, 0).unwrap();
+        let old_reader = SSTableReader::open(&old_path, 0).unwrap();
+
+        let new_path = dir.path().join("new.sst");
+        let new_entries = vec![(b"alpha".to_vec(), Some(b"new".to_vec()))];
+        SSTableWriter::write(&new_path, &new_entries, 0).unwrap();
+        let new_reader = SSTableReader::open(&new_path, 0).unwrap();
+
+        // Simulate engine read: check newest first.
+        let readers = [&new_reader, &old_reader];
+        let mut result = None;
+        for reader in &readers {
+            if let Some(val) = reader.get(b"alpha").unwrap() {
+                result = Some(val);
+                break;
+            }
+        }
+        assert_eq!(result, Some(Some(b"new".to_vec())));
+    }
+
+    #[test]
+    fn test_remove_file() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("removable.sst");
+        SSTableWriter::write(&path, &sample_entries(), 0).unwrap();
+        let reader = SSTableReader::open(&path, 0).unwrap();
+
+        assert!(path.exists());
+        reader.remove_file().unwrap();
+        assert!(!path.exists());
+    }
+}
