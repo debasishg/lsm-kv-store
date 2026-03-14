@@ -11,7 +11,7 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 
 ## Phase 2: MemTable
 
-- [ ] **T-003** Implement `MemTable` struct in `src/memtable.rs`: `BTreeMap<Vec<u8>, Option<Vec<u8>>>` (None = tombstone), methods `put(&mut self, key, value)`, `get(&self, key) → Option<Option<Vec<u8>>>`, `delete(&mut self, key)`, `is_empty()`, `len()`, `approximate_size()`, `entries() → iterator`
+- [x] **T-003** Implement `MemTable` struct in `src/memtable.rs`: `BTreeMap<Vec<u8>, Option<Vec<u8>>>` (None = tombstone), methods `put(&mut self, key, value)`, `get(&self, key) → Option<Option<Vec<u8>>>`, `delete(&mut self, key)`, `is_empty()`, `len()`, `approximate_size()`, `entries() → iterator`
 - [ ] **T-004** Write unit tests for MemTable: insert, overwrite, delete (tombstone), get missing key, size tracking, iteration order
 
 ## Phase 3: Write-Ahead Log

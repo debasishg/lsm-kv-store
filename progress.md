@@ -21,3 +21,8 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 ### 2026-03-14 — T-002: Implement KvError enum
 - Created `KvError` enum in `src/error.rs` with thiserror: Io (from io::Error), Serialization (from bincode::Error), KeyNotFound, CorruptedWal(String), InvalidOperation(String).
 - Added `Result<T>` type alias. Re-exported `KvError` and `Result` from `lib.rs`.
+
+### 2026-03-14 — T-003: Implement MemTable
+- Implemented `MemTable` in `src/memtable.rs`: BTreeMap-backed, with put/get/delete/is_empty/len/approximate_size/entries/drain methods.
+- Size tracking: incremental on put/delete, accounts for overwrites and tombstones.
+- Added `Default` impl. `drain()` method for flush-to-SSTable path.
