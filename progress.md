@@ -39,3 +39,9 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 ### 2026-03-14 — T-006: WAL unit tests
 - 7 tests: append+recover, empty WAL, nonexistent file, corrupted trailing bytes, truncated payload, reset, close+reopen+append.
 - All pass. Graceful degradation on corruption confirmed.
+
+### 2026-03-14 — T-007/T-008: SSTable Writer + Reader
+- Implemented `SSTableWriter::write()` and `SSTableReader` in `src/sstable.rs`.
+- Format: data block (length-prefixed bincode entries) + index block (bincode Vec<(key, offset)>) + footer (u64 index offset).
+- Reader: opens file, loads index into memory, binary search for point lookups.
+- Added `Entry` type alias, `scan_all()` for compaction, `remove_file()`, `SSTableMeta`.
