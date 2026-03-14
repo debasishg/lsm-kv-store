@@ -23,13 +23,14 @@ impl MemTable {
 
     /// Inserts or overwrites a key-value pair.
     pub fn put(&mut self, key: Vec<u8>, value: Vec<u8>) {
-        let added = key.len() + value.len();
+        let key_len = key.len();
+        let val_len = value.len();
         if let Some(old) = self.entries.insert(key, Some(value)) {
-            // Subtract the old value size (key is unchanged).
-            let removed = old.as_ref().map_or(0, Vec::len);
-            self.size = self.size + added - removed;
+            // Key already counted — only adjust for value size change.
+            let old_val_len = old.as_ref().map_or(0, Vec::len);
+            self.size = self.size + val_len - old_val_len;
         } else {
-            self.size += added;
+            self.size += key_len + val_len;
         }
     }
 
@@ -84,5 +85,126 @@ impl MemTable {
 impl Default for MemTable {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_put_and_get() {
+        let mut mt = MemTable::new();
+        mt.put(b"key1".to_vec(), b"value1".to_vec());
+        assert_eq!(mt.get(b"key1"), Some(&Some(b"value1".to_vec())));
+    }
+
+    #[test]
+    fn test_get_missing_key() {
+        let mt = MemTable::new();
+        assert_eq!(mt.get(b"nonexistent"), None);
+    }
+
+    #[test]
+    fn test_overwrite() {
+        let mut mt = MemTable::new();
+        mt.put(b"key1".to_vec(), b"v1".to_vec());
+        mt.put(b"key1".to_vec(), b"v2".to_vec());
+        assert_eq!(mt.get(b"key1"), Some(&Some(b"v2".to_vec())));
+        assert_eq!(mt.len(), 1);
+    }
+
+    #[test]
+    fn test_delete_tombstone() {
+        let mut mt = MemTable::new();
+        mt.put(b"key1".to_vec(), b"value1".to_vec());
+        mt.delete(b"key1".to_vec());
+        assert_eq!(mt.get(b"key1"), Some(&None));
+        assert_eq!(mt.len(), 1);
+    }
+
+    #[test]
+    fn test_delete_nonexistent_key() {
+        let mut mt = MemTable::new();
+        mt.delete(b"ghost".to_vec());
+        assert_eq!(mt.get(b"ghost"), Some(&None));
+        assert_eq!(mt.len(), 1);
+    }
+
+    #[test]
+    fn test_is_empty_and_len() {
+        let mut mt = MemTable::new();
+        assert!(mt.is_empty());
+        assert_eq!(mt.len(), 0);
+
+        mt.put(b"a".to_vec(), b"1".to_vec());
+        assert!(!mt.is_empty());
+        assert_eq!(mt.len(), 1);
+
+        mt.put(b"b".to_vec(), b"2".to_vec());
+        assert_eq!(mt.len(), 2);
+    }
+
+    #[test]
+    fn test_approximate_size() {
+        let mut mt = MemTable::new();
+        assert_eq!(mt.approximate_size(), 0);
+
+        mt.put(b"key".to_vec(), b"value".to_vec());
+        assert_eq!(mt.approximate_size(), 8);
+
+        mt.put(b"key".to_vec(), b"v".to_vec());
+        assert_eq!(mt.approximate_size(), 4);
+
+        mt.delete(b"key".to_vec());
+        assert_eq!(mt.approximate_size(), 3);
+    }
+
+    #[test]
+    fn test_size_after_delete_nonexistent() {
+        let mut mt = MemTable::new();
+        mt.delete(b"abc".to_vec());
+        assert_eq!(mt.approximate_size(), 3);
+    }
+
+    #[test]
+    fn test_entries_sorted_order() {
+        let mut mt = MemTable::new();
+        mt.put(b"charlie".to_vec(), b"3".to_vec());
+        mt.put(b"alpha".to_vec(), b"1".to_vec());
+        mt.put(b"bravo".to_vec(), b"2".to_vec());
+
+        let keys: Vec<&Vec<u8>> = mt.entries().map(|(k, _)| k).collect();
+        assert_eq!(
+            keys,
+            vec![&b"alpha".to_vec(), &b"bravo".to_vec(), &b"charlie".to_vec()]
+        );
+    }
+
+    #[test]
+    fn test_drain_empties_table() {
+        let mut mt = MemTable::new();
+        mt.put(b"x".to_vec(), b"1".to_vec());
+        mt.put(b"y".to_vec(), b"2".to_vec());
+        mt.delete(b"z".to_vec());
+
+        let drained = mt.drain();
+        assert_eq!(drained.len(), 3);
+        assert!(mt.is_empty());
+        assert_eq!(mt.approximate_size(), 0);
+
+        assert_eq!(drained[0].0, b"x");
+        assert_eq!(drained[1].0, b"y");
+        assert_eq!(drained[2].0, b"z");
+        assert_eq!(drained[2].1, None);
+    }
+
+    #[test]
+    fn test_put_after_delete_restores_value() {
+        let mut mt = MemTable::new();
+        mt.put(b"key".to_vec(), b"v1".to_vec());
+        mt.delete(b"key".to_vec());
+        mt.put(b"key".to_vec(), b"v2".to_vec());
+        assert_eq!(mt.get(b"key"), Some(&Some(b"v2".to_vec())));
     }
 }

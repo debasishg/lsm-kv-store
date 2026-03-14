@@ -26,3 +26,7 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 - Implemented `MemTable` in `src/memtable.rs`: BTreeMap-backed, with put/get/delete/is_empty/len/approximate_size/entries/drain methods.
 - Size tracking: incremental on put/delete, accounts for overwrites and tombstones.
 - Added `Default` impl. `drain()` method for flush-to-SSTable path.
+
+### 2026-03-14 — T-004: MemTable unit tests
+- Added 11 unit tests covering: put/get, missing key, overwrite, delete (tombstone), delete nonexistent, is_empty/len, approximate_size, sorted iteration, drain, put-after-delete.
+- Fixed size tracking bug: overwrite was double-counting key bytes. Fixed by only adjusting value size diff on overwrite.
