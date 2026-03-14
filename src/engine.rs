@@ -328,9 +328,9 @@ impl KvStore {
         // Remove old SSTable files and readers.
         self.remove_sstables(&to_compact)?;
 
-        // Add new SSTable.
+        // Add new SSTable (newest-first: insert at front).
         let reader = SSTableReader::open(&new_path, new_level)?;
-        self.sstables.push(reader);
+        self.sstables.insert(0, reader);
         self.manifest.sstables.push(new_meta);
         self.save_manifest()?;
 

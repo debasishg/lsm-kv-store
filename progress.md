@@ -58,6 +58,10 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 - Also included: `list()` method, preliminary compaction (`compact_level`), `flush()` force-flush.
 - All 24 existing tests still pass. Engine compiles clippy-clean.
 
+### 2026-03-14 — T-015/T-016: Compaction + tests
+- Compaction was implemented as part of the engine (T-010). Fixed a critical bug: compacted SSTable reader was pushed to end of readers list (checked last), causing newest overwrites to be hidden by older compacted SSTables. Fix: `insert(0, reader)` instead of `push(reader)`.
+- 4 compaction integration tests: triggered by many flushes, preserves overwrites, handles tombstones, data integrity after reopen. All 39 tests pass.
+
 ### 2026-03-14 — T-014: KvStore integration tests
 - Created `tests/integration.rs` with 11 tests: put/get round-trip, overwrite, delete (tombstone), delete nonexistent, persistence across reopen (flushed), WAL recovery (unflushed), overwrite persistence, tombstone persistence, list (live entries only), flush+read from SSTable, many writes/reads (100 KV pairs with small threshold).
 - All pass including the stress test with 100 entries and forced flushes.

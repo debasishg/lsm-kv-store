@@ -35,8 +35,8 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 
 ## Phase 6: Compaction
 
-- [ ] **T-015** Implement size-tiered compaction in `src/engine.rs` or `src/compaction.rs`: when level N has ≥ threshold SSTables, merge them into one SSTable at level N+1; during merge, keep newest value for each key, drop tombstones that have no older references; update manifest; delete old SSTable files
-- [ ] **T-016** Write compaction tests: multiple flushes trigger compaction, data integrity after compaction, tombstones correctly removed, manifest updated
+- [x] **T-015** Implement size-tiered compaction in `src/engine.rs` or `src/compaction.rs`: when level N has ≥ threshold SSTables, merge them into one SSTable at level N+1; during merge, keep newest value for each key, drop tombstones that have no older references; update manifest; delete old SSTable files
+- [x] **T-016** Write compaction tests: multiple flushes trigger compaction, data integrity after compaction, tombstones correctly removed, manifest updated
 
 ## Phase 7: CLI
 
