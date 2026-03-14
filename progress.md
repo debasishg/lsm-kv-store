@@ -49,3 +49,11 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 ### 2026-03-14 — T-009: SSTable tests
 - 6 tests: write+read, point lookup miss, tombstone, scan_all, multiple SSTables newest-wins, remove_file.
 - All pass. Verified format integrity through write→read round-trip.
+
+### 2026-03-14 — T-010/T-011/T-012/T-013: KvStore Engine + Manifest
+- Implemented full `KvStore` engine in `src/engine.rs`: config, memtable, WAL, SSTables, manifest.
+- Write path: WAL append + fsync → memtable insert → auto-flush to SSTable on threshold.
+- Read path: memtable → SSTables newest-first, tombstone = deleted.
+- Manifest: bincode-serialized, atomic save via write-tmp + rename.
+- Also included: `list()` method, preliminary compaction (`compact_level`), `flush()` force-flush.
+- All 24 existing tests still pass. Engine compiles clippy-clean.

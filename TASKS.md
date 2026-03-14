@@ -27,10 +27,10 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 
 ## Phase 5: KvStore Engine
 
-- [ ] **T-010** Implement `KvStore` struct in `src/engine.rs`: holds MemTable + WAL + list of SSTableReaders + config (memtable size threshold, db directory path); constructor `open(path) → Result<KvStore>` creates db dir, opens/recovers WAL, loads existing SSTables from manifest
-- [ ] **T-011** Implement write path: `put(key, value)` and `delete(key)` — append to WAL, insert into MemTable; if MemTable exceeds threshold, flush to new SSTable, clear MemTable, reset WAL
-- [ ] **T-012** Implement read path: `get(key) → Result<Option<String>>` — check MemTable first, then SSTables newest-to-oldest; first match wins; tombstone (None) means deleted → return None
-- [ ] **T-013** Implement manifest file: simple metadata file tracking list of active SSTable files and their levels; written atomically (write-tmp + rename) on flush and compaction
+- [x] **T-010** Implement `KvStore` struct in `src/engine.rs`: holds MemTable + WAL + list of SSTableReaders + config (memtable size threshold, db directory path); constructor `open(path) → Result<KvStore>` creates db dir, opens/recovers WAL, loads existing SSTables from manifest
+- [x] **T-011** Implement write path: `put(key, value)` and `delete(key)` — append to WAL, insert into MemTable; if MemTable exceeds threshold, flush to new SSTable, clear MemTable, reset WAL
+- [x] **T-012** Implement read path: `get(key) → Result<Option<String>>` — check MemTable first, then SSTables newest-to-oldest; first match wins; tombstone (None) means deleted → return None
+- [x] **T-013** Implement manifest file: simple metadata file tracking list of active SSTable files and their levels; written atomically (write-tmp + rename) on flush and compaction
 - [ ] **T-014** Write integration tests for KvStore: put/get/delete round-trip, persistence across drop+reopen, overwrite semantics, tombstone semantics, WAL recovery after crash simulation
 
 ## Phase 6: Compaction
