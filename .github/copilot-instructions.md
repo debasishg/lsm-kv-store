@@ -57,3 +57,26 @@ Do **not** add external DB crates; the whole point is building from scratch.
 3. Use `#[derive(Debug, Clone, ...)]` where appropriate.
 4. Write at least one unit test for every new function.
 5. Run `cargo clippy` and `cargo fmt` mentally — generated code should pass both.
+
+## General Rust Style
+- Always write safe Rust first; justify any `unsafe` with // SAFETY: comments
+- Use anyhow or thiserror for error handling (prefer custom KvError enum)
+- Prefer idiomatic patterns: Result<(), anyhow::Error>, derive(Debug, Clone) where sensible
+- Follow Rust API guidelines: clear names, good docs, no unwrap/panic in library code
+- cargo fmt + clippy clean always
+
+## Project-Specific (LSM KV Store)
+- Keys & values are Vec<u8> internally
+- Use BTreeMap or skiplist for MemTable
+- WAL = append-only log with bincode serialization
+- SSTables = sorted on-disk with index block
+- Tombstones = None value in Option<Vec<u8>>
+- Single-threaded MVP (no Arc/Mutex unless adding concurrency later)
+- Test everything: unit for components, integration for crash recovery
+
+## When suggesting code
+- Include cargo test / cargo check commands when relevant
+- Keep changes minimal and atomic
+- Prefer explicit over implicit (e.g. handle all Result cases)
+
+These instructions apply repo-wide.
