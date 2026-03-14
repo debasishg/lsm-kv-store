@@ -57,3 +57,7 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 - Manifest: bincode-serialized, atomic save via write-tmp + rename.
 - Also included: `list()` method, preliminary compaction (`compact_level`), `flush()` force-flush.
 - All 24 existing tests still pass. Engine compiles clippy-clean.
+
+### 2026-03-14 — T-014: KvStore integration tests
+- Created `tests/integration.rs` with 11 tests: put/get round-trip, overwrite, delete (tombstone), delete nonexistent, persistence across reopen (flushed), WAL recovery (unflushed), overwrite persistence, tombstone persistence, list (live entries only), flush+read from SSTable, many writes/reads (100 KV pairs with small threshold).
+- All pass including the stress test with 100 entries and forced flushes.

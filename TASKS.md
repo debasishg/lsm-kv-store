@@ -31,7 +31,7 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 - [x] **T-011** Implement write path: `put(key, value)` and `delete(key)` — append to WAL, insert into MemTable; if MemTable exceeds threshold, flush to new SSTable, clear MemTable, reset WAL
 - [x] **T-012** Implement read path: `get(key) → Result<Option<String>>` — check MemTable first, then SSTables newest-to-oldest; first match wins; tombstone (None) means deleted → return None
 - [x] **T-013** Implement manifest file: simple metadata file tracking list of active SSTable files and their levels; written atomically (write-tmp + rename) on flush and compaction
-- [ ] **T-014** Write integration tests for KvStore: put/get/delete round-trip, persistence across drop+reopen, overwrite semantics, tombstone semantics, WAL recovery after crash simulation
+- [x] **T-014** Write integration tests for KvStore: put/get/delete round-trip, persistence across drop+reopen, overwrite semantics, tombstone semantics, WAL recovery after crash simulation
 
 ## Phase 6: Compaction
 
