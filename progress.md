@@ -35,3 +35,7 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 - Implemented `WalEntry` enum (Put/Delete) with serde derive in `src/wal.rs`.
 - Implemented `Wal` struct: open, append (length-prefixed bincode), fsync, recover (graceful truncation handling), reset, remove.
 - Using `u32` length prefix + bincode payload format. Incomplete trailing entries silently skipped on recovery.
+
+### 2026-03-14 — T-006: WAL unit tests
+- 7 tests: append+recover, empty WAL, nonexistent file, corrupted trailing bytes, truncated payload, reset, close+reopen+append.
+- All pass. Graceful degradation on corruption confirmed.

@@ -115,3 +115,147 @@ impl Wal {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn put_entry(key: &[u8], value: &[u8]) -> WalEntry {
+        WalEntry::Put {
+            key: key.to_vec(),
+            value: value.to_vec(),
+        }
+    }
+
+    fn delete_entry(key: &[u8]) -> WalEntry {
+        WalEntry::Delete { key: key.to_vec() }
+    }
+
+    #[test]
+    fn test_append_and_recover() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("test.wal");
+
+        {
+            let mut wal = Wal::open(&wal_path).unwrap();
+            wal.append(&put_entry(b"k1", b"v1")).unwrap();
+            wal.append(&put_entry(b"k2", b"v2")).unwrap();
+            wal.append(&delete_entry(b"k1")).unwrap();
+            wal.fsync().unwrap();
+        }
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert_eq!(entries.len(), 3);
+        assert_eq!(entries[0], put_entry(b"k1", b"v1"));
+        assert_eq!(entries[1], put_entry(b"k2", b"v2"));
+        assert_eq!(entries[2], delete_entry(b"k1"));
+    }
+
+    #[test]
+    fn test_recover_empty_wal() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("empty.wal");
+
+        {
+            let wal = Wal::open(&wal_path).unwrap();
+            drop(wal);
+        }
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_recover_nonexistent_file() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("does_not_exist.wal");
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_recover_corrupted_trailing_bytes() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("corrupt.wal");
+
+        {
+            let mut wal = Wal::open(&wal_path).unwrap();
+            wal.append(&put_entry(b"good", b"data")).unwrap();
+            wal.fsync().unwrap();
+        }
+
+        // Append garbage bytes (incomplete length prefix).
+        {
+            let mut file = OpenOptions::new().append(true).open(&wal_path).unwrap();
+            file.write_all(&[0xFF, 0xFF]).unwrap();
+        }
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0], put_entry(b"good", b"data"));
+    }
+
+    #[test]
+    fn test_recover_truncated_payload() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("truncated.wal");
+
+        {
+            let mut wal = Wal::open(&wal_path).unwrap();
+            wal.append(&put_entry(b"ok", b"fine")).unwrap();
+            wal.fsync().unwrap();
+        }
+
+        {
+            let mut file = OpenOptions::new().append(true).open(&wal_path).unwrap();
+            let len: u32 = 100;
+            file.write_all(&len.to_le_bytes()).unwrap();
+            file.write_all(b"short").unwrap();
+        }
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0], put_entry(b"ok", b"fine"));
+    }
+
+    #[test]
+    fn test_reset_clears_wal() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("reset.wal");
+
+        let mut wal = Wal::open(&wal_path).unwrap();
+        wal.append(&put_entry(b"a", b"1")).unwrap();
+        wal.append(&put_entry(b"b", b"2")).unwrap();
+        wal.fsync().unwrap();
+
+        wal.reset().unwrap();
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_close_reopen_append() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("reopen.wal");
+
+        {
+            let mut wal = Wal::open(&wal_path).unwrap();
+            wal.append(&put_entry(b"k1", b"v1")).unwrap();
+            wal.fsync().unwrap();
+        }
+
+        {
+            let mut wal = Wal::open(&wal_path).unwrap();
+            wal.append(&put_entry(b"k2", b"v2")).unwrap();
+            wal.fsync().unwrap();
+        }
+
+        let entries = Wal::recover(&wal_path).unwrap();
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0], put_entry(b"k1", b"v1"));
+        assert_eq!(entries[1], put_entry(b"k2", b"v2"));
+    }
+}
