@@ -7,7 +7,7 @@ All tasks are atomic, ordered by dependency. Execute top-down; one per iteration
 ## Phase 1: Foundation
 
 - [x] **T-001** Set up project structure: create `src/lib.rs` with module declarations (`error`, `memtable`, `wal`, `sstable`, `engine`), add dependencies to `Cargo.toml` (clap, serde, bincode, thiserror; tempfile + rand as dev-deps), ensure `cargo check` passes
-- [ ] **T-002** Implement `KvError` enum in `src/error.rs` using `thiserror`: variants for Io, Serialization, KeyNotFound, CorruptedWal, InvalidOperation; derive Debug/Clone where appropriate; re-export from `lib.rs`
+- [x] **T-002** Implement `KvError` enum in `src/error.rs` using `thiserror`: variants for Io, Serialization, KeyNotFound, CorruptedWal, InvalidOperation; derive Debug/Clone where appropriate; re-export from `lib.rs`
 
 ## Phase 2: MemTable
 

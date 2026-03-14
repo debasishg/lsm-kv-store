@@ -17,3 +17,7 @@ Format: Date/time (IST) | Task completed | Key outcomes & decisions | Any notes/
 - Added dependencies to `Cargo.toml`: clap 4 (derive), serde 1 (derive), bincode 1, thiserror 2; dev-deps: tempfile 3, rand 0.8.
 - Created placeholder module files: `src/error.rs`, `src/memtable.rs`, `src/wal.rs`, `src/sstable.rs`, `src/engine.rs`.
 - `cargo check`, `cargo fmt --check`, `cargo clippy` all pass clean.
+
+### 2026-03-14 — T-002: Implement KvError enum
+- Created `KvError` enum in `src/error.rs` with thiserror: Io (from io::Error), Serialization (from bincode::Error), KeyNotFound, CorruptedWal(String), InvalidOperation(String).
+- Added `Result<T>` type alias. Re-exported `KvError` and `Result` from `lib.rs`.
